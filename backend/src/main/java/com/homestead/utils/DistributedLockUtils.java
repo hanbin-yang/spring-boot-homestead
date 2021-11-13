@@ -35,6 +35,7 @@ public class DistributedLockUtils {
     private static final int DEFAULT_EXPIRE_SECONDS = 120;
 
     private static final long SLEEP_TIME = 800;
+    private static final long MIN_SLEEP_TIME = 800;
 
     static {
         lockScript.setScriptSource(new ResourceScriptSource(new PathMatchingResourcePatternResolver().getResource("classpath:script/lock.lua")));
@@ -113,8 +114,10 @@ public class DistributedLockUtils {
             long waitTimeMills = timeUnit.toMillis(waitTime);
             // 自旋计数
             long circleCount = 0;
-            while ((redisExpTime = tryLock(lockKey, expireTime, timeUnit)) != null) {
-                if (waitTime <= 0) {
+            int retry = waitTimeMills <= 0 ? 0 : 10;
+            while ((redisExpTime = tryLock(lockKey, expireTime, timeUnit, retry)) != null) {
+                waitTimeMills -= retry * MIN_SLEEP_TIME;
+                if (waitTimeMills <= 0) {
                     break;
                 }
                 if (redisExpTime < sleepTime) {
@@ -165,7 +168,8 @@ public class DistributedLockUtils {
             // redis过期剩余时间
             Long redisExpTime = null;
             long sleepTime = SLEEP_TIME;
-            while ((redisExpTime = tryLock(lockKey, expireTime, timeUnit)) != null) {
+            int retry = 10;
+            while ((redisExpTime = tryLock(lockKey, expireTime, timeUnit, retry)) != null) {
                 if (redisExpTime < sleepTime) {
                     sleepTime = redisExpTime;
                 }
@@ -193,6 +197,23 @@ public class DistributedLockUtils {
             }
         }
         return null;
+    }
+
+    private static Long tryLock(String lockKey, long releaseTime, TimeUnit timeUnit, int retry) {
+        Long result = tryLock(lockKey, releaseTime, timeUnit);
+        if (result == null) {
+            return result;
+        }
+
+        for (int i = 0; i < retry; i++) {
+            result = tryLock(lockKey, releaseTime, timeUnit);
+            if (result == null) {
+                return result;
+            }
+            ThreadUtil.sleep(MIN_SLEEP_TIME);
+        }
+
+        return result;
     }
 
     private static Long tryLock(String lockKey, long releaseTime, TimeUnit timeUnit) {
