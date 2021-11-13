@@ -132,7 +132,7 @@ public class DistributedLockUtils {
                 }
                 circleCount++;
                 if (sleepTime * circleCount > 1000 * 60 * 60) {
-                    log.warn("doExecuteTryLock锁自旋等待：circleCount={}, lockKey={}", circleCount, lockKey);
+                    log.warn("doExecuteLock wait too long: circleCount={}, lockKey={}", circleCount, lockKey);
                 }
             }
         } catch (Exception e) {
@@ -169,11 +169,17 @@ public class DistributedLockUtils {
             Long redisExpTime = null;
             long sleepTime = SLEEP_TIME;
             int retry = 10;
+            // 自旋计数
+            long circleCount = 0;
             while ((redisExpTime = tryLock(lockKey, expireTime, timeUnit, retry)) != null) {
                 if (redisExpTime < sleepTime) {
                     sleepTime = redisExpTime;
                 }
                 ThreadUtil.sleep(sleepTime);
+                circleCount++;
+                if (sleepTime * circleCount > 1000 * 60 * 60) {
+                    log.warn("doExecuteLock wait too long: circleCount={}, lockKey={}", circleCount, lockKey);
+                }
             }
         } catch (Exception e) {
             throw new RuntimeException("获取redis锁异常, lockKey=" + lockKey, e);
