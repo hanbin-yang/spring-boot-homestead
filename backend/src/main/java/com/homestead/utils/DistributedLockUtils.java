@@ -35,7 +35,7 @@ public class DistributedLockUtils {
     private static final int DEFAULT_EXPIRE_SECONDS = 120;
 
     private static final long SLEEP_TIME = 800;
-    private static final long MIN_SLEEP_TIME = 800;
+    private static final long MIN_SLEEP_TIME = 10;
 
     static {
         lockScript.setScriptSource(new ResourceScriptSource(new PathMatchingResourcePatternResolver().getResource("classpath:script/lock.lua")));
