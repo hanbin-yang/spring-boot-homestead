@@ -8,8 +8,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * @since 2021/11/11 20:31
  */
 @SpringBootApplication
-public class AppStarter {
+public class BackendStarter {
     public static void main(String[] args) {
-        SpringApplication.run(AppStarter.class, args);
+        SpringApplication.run(BackendStarter.class, args);
     }
 }
