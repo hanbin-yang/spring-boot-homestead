@@ -1,6 +1,7 @@
 package com.homestead.redis;
 
 import com.homestead.BaseTest;
+import com.homestead.utils.DistributedLockUtils;
 import org.junit.Test;
 
 /**
@@ -10,6 +11,8 @@ import org.junit.Test;
 public class RedisTest extends BaseTest {
     @Test
     public void lockTest() {
-
+        DistributedLockUtils.executeLock("yhb:redis:test", () -> {
+            System.out.println("hello");
+        });
     }
 }

@@ -6,6 +6,7 @@ import com.homestead.utils.result.LockResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.scripting.support.ResourceScriptSource;
@@ -24,7 +25,7 @@ import java.util.function.Supplier;
 public class DistributedLockUtils {
     private static final Logger log = LoggerFactory.getLogger("com.homestead.utils.redis.distributed.lock");
 
-    private static final StringRedisTemplate redisTemplate = SpringBeanFactory.getBean(StringRedisTemplate.class);
+    private static final RedisTemplate<Object, Object> redisTemplate = SpringBeanFactory.getBean("redisTemplate", RedisTemplate.class);
 
     private static final DefaultRedisScript<Long> lockScript = new DefaultRedisScript<>();
     private static final DefaultRedisScript<Object> unlockScript = new DefaultRedisScript<>();
@@ -35,7 +36,7 @@ public class DistributedLockUtils {
     private static final int DEFAULT_EXPIRE_SECONDS = 120;
 
     private static final long SLEEP_TIME = 800;
-    private static final long MIN_SLEEP_TIME = 10;
+    private static final long MIN_SLEEP_TIME = 30;
 
     static {
         lockScript.setScriptSource(new ResourceScriptSource(new PathMatchingResourcePatternResolver().getResource("classpath:script/lock.lua")));
